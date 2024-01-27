@@ -1,21 +1,3 @@
-provider "aws" {
-  region = var.aws_region
-}
-
-provider "archive" {}
-
-data "archive_file" "url_create" {
-  type        = "zip"
-  source_file = var.url_create_source
-  output_path = var.url_create_output
-}
-
-data "archive_file" "url_retrieve" {
-  type        = "zip"
-  source_file = var.url_retrieve_source
-  output_path = var.url_retrieve_output
-}
-
 resource "aws_iam_role" "iam_role" {
   name = var.iam_role_name
   assume_role_policy = jsonencode({
@@ -48,7 +30,7 @@ resource "aws_iam_policy" "iam_policy" {
                 "dynamodb:Query",
                 "dynamodb:UpdateItem"
             ],
-            "Resource": "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.urlshortenertable.name}"
+            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.urlshortenertable.name}"
         }
     ]
 })
@@ -67,7 +49,6 @@ resource "aws_iam_role_policy_attachment" "managed-policy-attachment" {
 }
 
 resource "aws_lambda_function" "create_url_lambda" {
-  
   filename              = "${data.archive_file.url_create.output_path}"
   source_code_hash      = "${data.archive_file.url_create.output_base64sha256}"
   function_name         = var.create_url_lambda_name
@@ -84,10 +65,10 @@ resource "aws_lambda_function" "create_url_lambda" {
 }
 
 resource "aws_lambda_permission" "create_url_lambda_permission" {
-  action                = var.action
+  action                = "lambda:InvokeFunction"
   function_name         = aws_lambda_function.create_url_lambda.function_name
-  principal             = var.principal
-  statement_id          = var.statement_id
+  principal             = "apigateway.amazonaws.com"
+  statement_id          = "AllowExecutionFromAPIGateway"
 }
 
 resource "aws_lambda_function" "retrieve_url_lambda" {
@@ -108,8 +89,8 @@ resource "aws_lambda_function" "retrieve_url_lambda" {
 }
 
 resource "aws_lambda_permission" "retrieve_url_lambda_permission" {
-  action                = var.action
+  action                = "lambda:InvokeFunction"
   function_name         = aws_lambda_function.retrieve_url_lambda.function_name
-  principal             = var.principal
-  statement_id          = var.statement_id
+  principal             = "apigateway.amazonaws.com"
+  statement_id          = "AllowExecutionFromAPIGateway"
 }

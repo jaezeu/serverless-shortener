@@ -18,10 +18,6 @@ resource "aws_api_gateway_base_path_mapping" "example" {
   domain_name = aws_api_gateway_domain_name.example.domain_name
 }
 
-data "aws_route53_zone" "zone" {
-  name         = var.domain_name
-}
-
 resource "aws_route53_record" "example" {
   name    = aws_api_gateway_domain_name.example.domain_name
   type    = "A"
