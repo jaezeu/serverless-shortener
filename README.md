@@ -1,32 +1,13 @@
-## GitHub File/Folder Structure
-
-| File / Folder Name | Location | Usage |
-| --- | --- | --- |
-| README.md | `root` | Contains the details of contents present in the repo, including usage and architectural decisions |
-| apigateway.tf | `url-shortener-terraform/apigateway.tf` | API Gateway resources such as method,resources and deployment are declared here |
-| apigateway_integration_request.template | `url-shortener-terraform/apigateway_integration_request.template` | API Gateway integration request mapping template in the form of application/json in GET method |
-| data.tf | `url-shortener-terraform/data.tf` | To get details such as existing account ID to be refered by other resources in terraform |
-| domain.tf | `url-shortener-terraform/domain.tf` | Resources such as api gateway custom domain and A record are created here |
-| dynamodb.tf | `url-shortener-terraform/dynamodb.tf` | DynamoDB table declared here |
-| lambda.tf | `url-shortener-terraform/lambda.tf` | 2 Lambdas for GET and POST are created here as well as the required IAM permissions to the DynamoDB |
-| variables.tf | `url-shortener-terraform/variables.tf` | THis file is used to declare the input variables required in terraform |
-| terraform.tfvars | `url-shortener-terraform/terraform.tfvars` | Providing input variable values |
-| url-create-lambda.zip | `url-shortener-terraform/url-create-lambda.zip` | Lambda code zipped by terraform for deployment |
-| url-retrieve-lambda.zip | `url-shortener-terraform/url-retrieve-lambda.zip` | Lambda code zipped by terraform for deployment |
-| lambda_function.py | `url-create-lambda/lambda_function.py` | Lambda function used for POST /newurl api endpoint |
-| lambda_function.py | `url-retrieve-lambda/lambda_function.py` | Lambda function used for GET /newurl api endpoint |
-
-
 ## Building a URL shortener on AWS
 
 ### Prerequisites 
 
-1) Registered a domain in route 53 under jaz-poc.com
+1) Registered a domain in route 53
 
 <img width="1050" alt="Screenshot 2022-11-23 at 10 23 25 PM" src="https://user-images.githubusercontent.com/48310743/203571077-e356a650-98b7-4d26-8b37-91cda3ce6116.png">
 
 
-2) Request a public certificate in AWS certificate Manager for jaz-poc.com(and make sure its in ISSUED state)
+2) Request a public certificate in AWS certificate Manager(and make sure its in ISSUED state)
 
 <img width="694" alt="Screenshot 2022-11-23 at 10 24 29 PM" src="https://user-images.githubusercontent.com/48310743/203571232-1d115699-caae-4188-827c-40ec107a5bcd.png">
 
