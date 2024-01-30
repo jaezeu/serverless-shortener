@@ -2,18 +2,22 @@ data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
 
-data "archive_file" "url_create" {
-  type        = "zip"
-  source_file = var.url_create_source
-  output_path = var.url_create_output
-}
-
-data "archive_file" "url_retrieve" {
-  type        = "zip"
-  source_file = var.url_retrieve_source
-  output_path = var.url_retrieve_output
-}
-
 data "aws_route53_zone" "zone" {
-  name         = var.domain_name
+  name = var.domain_name
+}
+
+data "aws_iam_policy_document" "lambda_policy" {
+  statement {
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:GetItem",
+      "dynamodb:Query",
+      "dynamodb:UpdateItem"
+    ]
+
+    resources = [
+      "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.shortener_table.name}"
+    ]
+  }
 }

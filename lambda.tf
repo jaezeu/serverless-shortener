@@ -1,96 +1,52 @@
-resource "aws_iam_role" "iam_role" {
-  name = var.iam_role_name
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "lambda.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
+module "create_url_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
 
-resource "aws_iam_policy" "iam_policy" {
-  name                  = var.iam_policy_name
-  policy                = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:PutItem",
-                "dynamodb:DeleteItem",
-                "dynamodb:GetItem",
-                "dynamodb:Query",
-                "dynamodb:UpdateItem"
-            ],
-            "Resource": "arn:aws:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${aws_dynamodb_table.urlshortenertable.name}"
-        }
-    ]
-})
-  
-}
+  function_name = "${local.resource_prefix}-url-create"
+  description   = "Lambda function to create URL"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.7"
+  publish       = true
+  lambda_role   = module.lambda_role.iam_role_arn
 
-resource "aws_iam_role_policy_attachment" "iam_policy_attach" {
-  role                  = aws_iam_role.iam_role.name
-  policy_arn            = aws_iam_policy.iam_policy.arn
-}
+  create_package = true
+  source_path    = "./url-create-lambda/"
 
-resource "aws_iam_role_policy_attachment" "managed-policy-attachment" {
-  for_each   = toset(var.managed_policies)
-  role       = aws_iam_role.iam_role.name
-  policy_arn = each.value
-}
-
-resource "aws_lambda_function" "create_url_lambda" {
-  filename              = "${data.archive_file.url_create.output_path}"
-  source_code_hash      = "${data.archive_file.url_create.output_base64sha256}"
-  function_name         = var.create_url_lambda_name
-  role                  = aws_iam_role.iam_role.arn
-  handler               = var.lambda_handler
-  runtime               = var.lambda_runtime
-
-  dynamic "environment" {
-    for_each = length(var.environment_create) < 1 ? [] : [var.environment_create]
-    content {
-      variables = environment.value.variables
-    }
-  }
-}
-
-resource "aws_lambda_permission" "create_url_lambda_permission" {
-  action                = "lambda:InvokeFunction"
-  function_name         = aws_lambda_function.create_url_lambda.function_name
-  principal             = "apigateway.amazonaws.com"
-  statement_id          = "AllowExecutionFromAPIGateway"
-}
-
-resource "aws_lambda_function" "retrieve_url_lambda" {
-  filename              = "${data.archive_file.url_retrieve.output_path}"
-  source_code_hash      = "${data.archive_file.url_retrieve.output_base64sha256}"
-  function_name         = var.retrieve_url_lambda_name
-  role                  = aws_iam_role.iam_role.arn
-  handler               = var.lambda_handler
-  runtime               = var.lambda_runtime
-  
-  dynamic "environment" {
-    for_each = length(var.environment_retrieve) < 1 ? [] : [var.environment_retrieve]
-    content {
-      variables = environment.value.variables
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service = "apigateway"
     }
   }
 
+  environment_variables = {
+    APP_URL    = "https://jaezeu.com/"
+    MAX_CHAR   = "16"
+    MIN_CHAR   = "12"
+    REGION_AWS = "${data.aws_region.current.name}"
+    DB_NAME    = "${aws_dynamodb_table.shortener_table.name}"
+  }
 }
 
-resource "aws_lambda_permission" "retrieve_url_lambda_permission" {
-  action                = "lambda:InvokeFunction"
-  function_name         = aws_lambda_function.retrieve_url_lambda.function_name
-  principal             = "apigateway.amazonaws.com"
-  statement_id          = "AllowExecutionFromAPIGateway"
+module "retrieve_url_lambda" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "${local.resource_prefix}-url-retrieve"
+  description   = "Lambda function to retrieve URL"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.7"
+  publish       = true
+  lambda_role   = module.lambda_role.iam_role_arn
+
+  create_package = true
+  source_path    = "./url-retrieve-lambda/"
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service = "apigateway"
+    }
+  }
+
+  environment_variables = {
+    REGION_AWS = "${data.aws_region.current.name}"
+    DB_NAME    = "${aws_dynamodb_table.shortener_table.name}"
+  }
 }

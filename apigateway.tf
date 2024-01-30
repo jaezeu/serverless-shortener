@@ -1,5 +1,5 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name = var.api_name
+  name = "${local.resource_prefix}-api"
   endpoint_configuration {
     types = ["REGIONAL"]
   }
@@ -26,7 +26,7 @@ resource "aws_api_gateway_integration" "post_integration" {
   http_method             = aws_api_gateway_method.post_method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.create_url_lambda.invoke_arn
+  uri                     = module.create_url_lambda.lambda_function_invoke_arn
 }
 
 resource "aws_api_gateway_method_response" "response_200" {
@@ -62,9 +62,9 @@ resource "aws_api_gateway_integration" "get_integration" {
   http_method             = aws_api_gateway_method.get_method.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = aws_lambda_function.retrieve_url_lambda.invoke_arn
+  uri                     = module.retrieve_url_lambda.lambda_function_invoke_arn
   request_templates = {
-    "application/json" = "${file("apigateway_integration_request.template")}"
+    "application/json" = "${file("templates/apigateway_integration_request.template")}"
   }
 }
 
@@ -75,7 +75,7 @@ resource "aws_api_gateway_method_response" "response_302" {
   status_code = "302"
 
   response_parameters = {
-          "method.response.header.Location" = true
+    "method.response.header.Location" = true
   }
 }
 
@@ -86,7 +86,7 @@ resource "aws_api_gateway_integration_response" "get_integration_response" {
   status_code = aws_api_gateway_method_response.response_302.status_code
 
   response_parameters = {
-        "method.response.header.Location" = "integration.response.body.location"
+    "method.response.header.Location" = "integration.response.body.location"
   }
   depends_on = [
     aws_api_gateway_integration.get_integration
