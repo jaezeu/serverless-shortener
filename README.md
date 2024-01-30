@@ -2,16 +2,7 @@
 
 ### Prerequisites 
 
-1) Registered a domain in route 53
-
-<img width="1050" alt="Screenshot 2022-11-23 at 10 23 25 PM" src="https://user-images.githubusercontent.com/48310743/203571077-e356a650-98b7-4d26-8b37-91cda3ce6116.png">
-
-
-2) Request a public certificate in AWS certificate Manager(and make sure its in ISSUED state)
-
-<img width="694" alt="Screenshot 2022-11-23 at 10 24 29 PM" src="https://user-images.githubusercontent.com/48310743/203571232-1d115699-caae-4188-827c-40ec107a5bcd.png">
-
-
+1) Have a hosted zone set up for your domain in AWS Route53
 
 ### Architecture Diagram
 
