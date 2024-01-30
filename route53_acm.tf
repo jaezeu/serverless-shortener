@@ -1,11 +1,16 @@
-data "aws_acm_certificate" "issued" {
-  domain   = var.domain_name
-  statuses = ["ISSUED"]
+module "acm" {
+  #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash
+  source  = "terraform-aws-modules/acm/aws"
+  version = "~> 4.0"
+
+  domain_name       = "${local.resource_prefix}.${local.zone_name}"
+  zone_id           = data.aws_route53_zone.zone.zone_id
+  validation_method = "DNS"
 }
 
 resource "aws_api_gateway_domain_name" "shortener" {
-  domain_name              = var.domain_name
-  regional_certificate_arn = data.aws_acm_certificate.issued.arn
+  domain_name              = "${local.resource_prefix}.${local.zone_name}"
+  regional_certificate_arn = module.acm.acm_certificate_arn
 
   endpoint_configuration {
     types = ["REGIONAL"]
