@@ -64,7 +64,11 @@ resource "aws_api_gateway_integration" "get_integration" {
   type                    = "AWS"
   uri                     = module.retrieve_url_lambda.lambda_function_invoke_arn
   request_templates = {
-    "application/json" = "${file("templates/apigateway_integration_request.template")}"
+    "application/json" = <<EOF
+    { 
+      "short_id": "$input.params('shortid')" 
+    }
+    EOF
   }
 }
 
@@ -98,6 +102,11 @@ resource "aws_api_gateway_integration_response" "get_integration_response" {
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
 
+  depends_on = [ 
+    aws_api_gateway_integration.get_integration,
+    aws_api_gateway_integration.post_integration
+   ]
+
   triggers = {
     redeployment = sha1(jsonencode(aws_api_gateway_rest_api.api.body))
   }
@@ -110,5 +119,5 @@ resource "aws_api_gateway_deployment" "deployment" {
 resource "aws_api_gateway_stage" "stage" {
   deployment_id = aws_api_gateway_deployment.deployment.id
   rest_api_id   = aws_api_gateway_rest_api.api.id
-  stage_name    = var.stage_name
+  stage_name    = "dev"
 }
