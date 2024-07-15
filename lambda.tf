@@ -1,12 +1,14 @@
 module "create_url_lambda" {
   source = "terraform-aws-modules/lambda/aws"
+  version = "~> 7.7.0"
 
-  function_name = "${local.resource_prefix}-url-create"
+  function_name = "shortener-url-create"
   description   = "Lambda function to create URL"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
   publish       = true
   lambda_role   = module.lambda_role.iam_role_arn
+  create_role = false
 
   create_package = true
   source_path    = "./url-create-lambda/"
@@ -18,7 +20,7 @@ module "create_url_lambda" {
   }
 
   environment_variables = {
-    APP_URL    = "https://${local.resource_prefix}.${local.zone_name}/"
+    APP_URL    = "https://shortener.sctp-sandbox.com/"
     MAX_CHAR   = "16"
     MIN_CHAR   = "12"
     REGION_AWS = "${data.aws_region.current.name}"
@@ -28,12 +30,14 @@ module "create_url_lambda" {
 
 module "retrieve_url_lambda" {
   source = "terraform-aws-modules/lambda/aws"
+  version = "~> 7.7.0"
 
-  function_name = "${local.resource_prefix}-url-retrieve"
+  function_name = "shortener-url-retrieve"
   description   = "Lambda function to retrieve URL"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.12"
   publish       = true
+  create_role = false
   lambda_role   = module.lambda_role.iam_role_arn
 
   create_package = true
@@ -60,7 +64,7 @@ module "lambda_role" {
   ]
 
   create_role       = true
-  role_name         = "${local.resource_prefix}-lambda-role"
+  role_name         = "shortener-lambda-role"
   role_requires_mfa = false
   custom_role_policy_arns = [
     "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
@@ -72,7 +76,7 @@ module "lambda_policy" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-policy"
   version = "~> 5.30.0"
 
-  name = "${local.resource_prefix}-lambda-policy"
+  name = "shortener-lambda-policy"
 
   policy = data.aws_iam_policy_document.lambda_policy.json
 }

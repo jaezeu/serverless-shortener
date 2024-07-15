@@ -1,12 +1,11 @@
 resource "aws_api_gateway_rest_api" "api" {
-  name = "${local.resource_prefix}-api"
+  name = "urlshortener-api"
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
 
 ############# CREATE URL RESOURCES#####################
-
 resource "aws_api_gateway_resource" "newurl" {
   path_part   = "newurl"
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id
@@ -40,9 +39,7 @@ resource "aws_api_gateway_method_response" "response_200" {
   }
 }
 
-
-############# RETRIEVE SHORTENED URL RESOURCES#####################
-
+############# RETRIEVE URL RESOURCES#####################
 resource "aws_api_gateway_resource" "geturl" {
   path_part   = "{shortid}"
   parent_id   = aws_api_gateway_rest_api.api.root_resource_id

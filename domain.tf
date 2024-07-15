@@ -1,37 +1,26 @@
 module "acm" {
-  #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash
   source  = "terraform-aws-modules/acm/aws"
   version = "~> 4.0"
 
-  domain_name       = "${local.resource_prefix}.${local.zone_name}"
+  domain_name       = "shortener.sctp-sandbox.com"
   zone_id           = data.aws_route53_zone.zone.zone_id
   validation_method = "DNS"
 }
 
-module "records" {
-  #checkov:skip=CKV_TF_1:Ensure Terraform module sources use a commit hash
-  source  = "terraform-aws-modules/route53/aws//modules/records"
-  version = "~> 2.0"
+resource "aws_route53_record" "www" {
+  zone_id = data.aws_route53_zone.zone.zone_id
+  name    = "shortener"                    
+  type    = "A"
 
-  zone_name = local.zone_name
-
-  records = [
-    {
-      name = "${local.resource_prefix}"
-      type = "A"
-      alias = {
-        name                   = "${aws_api_gateway_domain_name.shortener.regional_domain_name}"
-        zone_id                = "${aws_api_gateway_domain_name.shortener.regional_zone_id}"
-        evaluate_target_health = true
-      }
-    },
-  ]
+  alias {
+    name                   = aws_api_gateway_domain_name.shortener.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.shortener.regional_zone_id
+    evaluate_target_health = true
+  }
 }
 
-############# API Gateway Domain Mapping#####################
-
 resource "aws_api_gateway_domain_name" "shortener" {
-  domain_name              = "${local.resource_prefix}.${local.zone_name}"
+  domain_name              = "shortener.sctp-sandbox.com"
   regional_certificate_arn = module.acm.acm_certificate_arn
 
   endpoint_configuration {
