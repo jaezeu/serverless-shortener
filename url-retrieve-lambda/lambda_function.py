@@ -2,6 +2,8 @@ import os
 import json
 import boto3
 
+
+
 region_aws = os.getenv('REGION_AWS')
 db_tablename = os.getenv('DB_NAME')
 ddb = boto3.resource('dynamodb', region_name = region_aws).Table(db_tablename)
@@ -20,8 +22,8 @@ def lambda_handler(event, context):
     
     except:
         return {
-            'statusCode': 302,
-            'location': 'https://jaz-bucket-images.s3.ap-southeast-1.amazonaws.com/404image.png'
+            'statusCode': 400,
+            'body': 'short_id or url invalid in request.'
         }
     
     return {

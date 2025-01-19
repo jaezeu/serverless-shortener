@@ -6,6 +6,7 @@ from random import choice, randint
 from time import strftime, time
 from urllib import parse
 
+
 app_url = os.getenv('APP_URL')
 min_char = int(os.getenv('MIN_CHAR'))
 max_char = int(os.getenv('MAX_CHAR'))

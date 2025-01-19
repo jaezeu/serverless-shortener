@@ -9,7 +9,7 @@ module "acm" {
 
 resource "aws_route53_record" "www" {
   zone_id = data.aws_route53_zone.zone.zone_id
-  name    = "shortener"                    
+  name    = "shortener"
   type    = "A"
 
   alias {
