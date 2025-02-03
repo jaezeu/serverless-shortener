@@ -6,7 +6,7 @@
 
 ### Architecture Diagram
 
-![urlshortener drawio (1)](https://user-images.githubusercontent.com/48310743/203239328-162b0c29-cc28-4aa8-8c61-977ff09bec6f.png)
+![Image](https://github.com/user-attachments/assets/feab6f4b-4996-42f1-ba15-ce7b3d169ea0)
 
 ### Components used
 1) AWS route 53 domain, to add A record with Alias to API gateway custom domain
