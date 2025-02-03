@@ -2,8 +2,6 @@ import os
 import json
 import boto3
 
-
-
 region_aws = os.getenv('REGION_AWS')
 db_tablename = os.getenv('DB_NAME')
 ddb = boto3.resource('dynamodb', region_name = region_aws).Table(db_tablename)
