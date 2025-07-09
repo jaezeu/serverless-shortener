@@ -6,11 +6,11 @@ resource "aws_cloudwatch_log_group" "waf_logs" {
 resource "aws_wafv2_ip_set" "allowed_ips" {
   name               = "url-shortener-allowed-ip-set"
   scope              = "REGIONAL"
-  description        = "Allowed IP addresses"
+  description        = "Allow only own IP address"
   ip_address_version = "IPV4"
 
   addresses = [
-    "155.69.193.63/32", #TODO
+    "${chomp(data.http.myip.response_body)}/32",
   ]
 }
 

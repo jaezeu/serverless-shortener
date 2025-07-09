@@ -6,6 +6,10 @@ data "aws_route53_zone" "zone" {
   name = "sctp-sandbox.com"
 }
 
+data "http" "myip" {
+  url = "https://ipv4.icanhazip.com"
+}
+
 data "aws_iam_policy_document" "lambda_policy" {
   statement {
     actions = [
