@@ -24,7 +24,7 @@ module "create_url_lambda" {
     APP_URL    = "https://shortener.sctp-sandbox.com/"
     MAX_CHAR   = "16"
     MIN_CHAR   = "12"
-    REGION_AWS = data.aws_region.current.name
+    REGION_AWS = data.aws_region.current.region
     DB_NAME    = aws_dynamodb_table.shortener_table.name
   }
 }
@@ -53,7 +53,7 @@ module "retrieve_url_lambda" {
   }
 
   environment_variables = {
-    REGION_AWS = data.aws_region.current.name
+    REGION_AWS = data.aws_region.current.region
     DB_NAME    = aws_dynamodb_table.shortener_table.name
   }
 }
