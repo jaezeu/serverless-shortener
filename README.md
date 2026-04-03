@@ -1,95 +1,128 @@
-## Building a URL shortener on AWS
+# Serverless URL Shortener (Terraform + AWS)
 
-### Prerequisites 
+This project deploys a serverless URL shortener on AWS using Terraform.
 
-1) Have a hosted zone set up for your domain in AWS Route53
-
-### Architecture Diagram
+## Architecture Diagram
 
 ![Image](https://github.com/user-attachments/assets/feab6f4b-4996-42f1-ba15-ce7b3d169ea0)
 
-### Components used
-1) AWS route 53 domain, to add A record with Alias to API gateway custom domain
-2) ACM cert for API gateway custom domain
-3) API Gateway 
-4) 2 lambda functions (1 for POST /newurl and 1 for GET /{shortid)
-5) Dynamodb with shortid as partition key, so that it would be unique
-6) IAM role with principle of least privilege assigned to Lambda 
+## What it does
 
-### Architectural Decisions and System Design
+- Creates short URLs with `POST /newurl`
+- Redirects users with `GET /{shortid}`
+- Stores mappings in DynamoDB
+- Uses API Gateway and Lambda for fully managed compute and routing
+- Uses Route 53 + ACM for a custom API domain
+- Applies a WAF ACL to API Gateway
 
-#### Architectural Requirements:
-1) High availability : Please make it highly available and no single point of failure.
-2) Scalability : Please make it scalable.
-3) Scaling target : 1000+ req/s, after scaling-up/out without major code change
+## Architecture
 
-#### Rationale behind design decision
+Core AWS services used:
 
-Based on the design requirements, I decided to go for a serverless computing architecture on AWS, making use of Api Gateway, DynamoDB and Lambda. AWS offers technologies for running code, managing data, and integrating applications, all without managing servers. Another benefit of serverless technologies feature automatic scaling, built-in high availability, and a pay-for-use billing model to increase agility and optimize costs.
+- API Gateway (Regional)
+- Lambda (create URL, retrieve URL)
+- DynamoDB (`short_id` as partition key, `PAY_PER_REQUEST` billing)
+- IAM role/policy for least-privilege Lambda access to DynamoDB
+- Route 53 + ACM + API Gateway custom domain
+- WAFv2 (IP allowlist pattern)
 
-#### Scaling in Lambda
+## Repository layout
 
-Lambda is engineered to provide managed scaling in a way that does not rely upon threading or any custom engineering in your code. This also aligns with the requirement that we do not have to do any code change as the number of requests increase. As traffic increases, Lambda increases the number of concurrent executions. Moreover, according to AWS, all AWS accounts start with a default concurrent limit of 1000 per Region. For more details: https://docs.aws.amazon.com/lambda/latest/operatorguide/scaling-concurrency.html
+- `apigateway.tf`: API resources, methods, integrations, deployment, stage
+- `lambda.tf`: Lambda modules, runtime config, IAM role and policy modules
+- `dynamodb.tf`: DynamoDB table definition
+- `domain.tf`: ACM, API custom domain, base path mapping, Route 53 record
+- `data.tf`: AWS account/region/Route53 lookups and IAM policy document
+- `waf.tf`: Web ACL, logging, and API stage association
+- `backend.tf`: Terraform S3 backend config
+- `provider.tf`: AWS provider region
+- `url-create-lambda/lambda_function.py`: Create short URL handler
+- `url-retrieve-lambda/lambda_function.py`: Retrieve/redirect handler
 
-#### Scaling in API Gateway
+## Prerequisites
 
-Amazon API Gateway acts as a proxy to the backend operations that you have configured. Amazon API Gateway will automatically scale to handle the amount of traffic your API receives. Moreover, API Gateway also has a account level throttling rate of 10000 requests per second with a burst of 5000 requests. However this might be throttled on a lambda level: https://docs.aws.amazon.com/lambda/latest/operatorguide/on-demand-scaling.html
+- Terraform installed
+- AWS credentials configured
+- Route 53 hosted zone for your domain
+- S3 bucket for Terraform remote state (or adjust backend strategy)
 
-#### Scaling in DynamoDB
+## Important configuration to update before deploy
 
-DynamoDB offers 2 modes of Scaling. 1 is pay per request and the other is provisioned. The pay per request works similar to a lambda pricing model as you only have to pay for what you use, based on how often you Read/Write to the DB. Whereas for provisioned, you are paying for the throughput 24/7. The table below shows the use cases for each:
+This repo currently contains environment-specific values. Update these to your own environment:
 
-| Provisioned | Pay Per Request(On Demand) |
-| --- | --- |
-| Predictable Traffic | Variable traffic. Also suitable for application in dev environment, for cost optimization purposes |
-| Predictable cost structure | Pay per Usage(Can be unpredictable cost based on traffic) |
+- `provider.tf`
+	- AWS region
+- `backend.tf`
+	- S3 backend bucket/key/region
+- `data.tf`
+	- `data "aws_route53_zone" "zone"` domain name
+- `domain.tf`
+	- ACM and API custom domain values
+- `lambda.tf`
+	- `APP_URL` environment variable used when generating short URLs
 
-For DynamoDB, I've decided to go with the PAY-PER-REQUEST option as I felt that it was a more cost effective option for the current use case, as it's not a application in production. The pay per request option can simply be enabled using the billing_mode attribute as shown in the screenshot below taken from my my terraform code (dynamodb.tf)
+## Deploy
 
-DynamoDB configuration:
-1) Partition Key: short_id
-2) Billing mode: PAY PER REQUEST
+From the project root, run:
 
-![image](https://user-images.githubusercontent.com/48310743/203617722-1e481648-1aad-4f14-876b-dfc8c8ad1447.png)
+```bash
+terraform init
+terraform plan
+terraform apply
+```
 
+## API contract
 
+### Create short URL
 
-#### IAM based on Least Privilege
+- Method: `POST`
+- Path: `/newurl`
+- Request body:
 
-I have also granted the lambda function, IAM Role based on least privilege(Only access to 1 Table and non admin rights)
+```json
+{
+	"long_url": "https://example.com/search?q=helloworld"
+}
+```
 
-<img width="833" alt="Screenshot 2022-11-23 at 11 21 32 PM" src="https://user-images.githubusercontent.com/48310743/203583554-3a78f2a4-c492-4da4-ad8c-011224dee71e.png">
+- Success response:
+	- Status: `200`
+	- Body: short URL string
 
-### Deployment using Infrastructure as Code
+### Resolve short URL
 
-I have decided to use Terraform as a IaC to deploy this application. Using IaC also gives me the advantage to deploy the whole infrastructure with a few commands that can be run inside the `url-shortener-terraform` directory:
+- Method: `GET`
+- Path: `/{shortid}`
+- Success response:
+	- Status: `302`
+	- Redirect location returned from integration mapping
 
-`terraform init` (Prepares the working directory so Terraform can run the configuration)
-`terraform plan` (Preview any changes before applying them)
-`terraform apply` (Executes the changes defined in Terraform configuration to create, update, or destroy resources)
+## Notes on scalability and reliability
 
-I have also used a s3 backend to configure remote state for terraform. This can be beneficial when working in a team, since there would only be 1 centralized state file and not multiple state files in each developers machine, which can cause conflicts in resource management.
+- Lambda scales with concurrent requests (subject to account quotas)
+- API Gateway scales automatically
+- DynamoDB on-demand mode is suitable for variable traffic patterns
+- Managed AWS services reduce operational overhead and single-host risk
 
-Note: In order to deploy in your own AWS environment please change the following:
-1) variable domain_name in terraform.tfvars to your own domain and make sure to have a ACM certificate for that domain
-2) Change the s3 backend bucket name in backend.tf to your own bucket. Or you may alternatively omit using a s3 backend and store the tfstate in the machine which the code runs(Not the recommended way in a actual prod environment)
+## Security notes
 
-### Testing Details
+- Lambda execution role has scoped DynamoDB permissions
+- API methods currently use `authorization = "NONE"`
+- WAF configuration currently defaults to block and allows only an IP set
+	- In the current `waf.tf`, the IP set is derived from your current public IP at apply time
+	- If your IP changes, requests may be blocked until the ACL is updated/re-applied
 
-#### Testing first endpoint using POST /newurl
+## Quick verification after deploy
 
-<img width="1168" alt="Screenshot 2022-11-23 at 10 55 30 PM" src="https://user-images.githubusercontent.com/48310743/203578413-eca72b35-395a-4736-a386-a340feddcc93.png">
+1. Call `POST /newurl` with a valid `long_url`
+2. Confirm a new item exists in DynamoDB
+3. Call `GET /{shortid}`
+4. Confirm redirect works and `hits` increments
 
-#### Verify that the generated shortid is stored in DynamoDB
+## Destroy
 
-<img width="726" alt="Screenshot 2022-11-23 at 11 02 52 PM" src="https://user-images.githubusercontent.com/48310743/203579453-810f0867-9d3c-4bb6-8b45-9100d1907059.png">
+To remove all resources:
 
-#### Testing second endpoint using GET /{shortid}
-
-<img width="1185" alt="Screenshot 2022-11-23 at 10 56 33 PM" src="https://user-images.githubusercontent.com/48310743/203578678-573fb534-c563-4e82-a366-cedea4881d27.png">
-
-#### Verify that the redirection path shows /search?q=helloworld
-
-<img width="742" alt="Screenshot 2022-11-23 at 10 58 03 PM" src="https://user-images.githubusercontent.com/48310743/203578855-e430020a-33db-41b6-9a40-18db95683ed1.png">
-
-
+```bash
+terraform destroy
+```
