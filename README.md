@@ -97,6 +97,14 @@ terraform apply
 	- Status: `302`
 	- Redirect location returned from integration mapping
 
+<img width="1168" alt="Screenshot 2022-11-23 at 10 55 30 PM" src="https://user-images.githubusercontent.com/48310743/203578413-eca72b35-395a-4736-a386-a340feddcc93.png">
+
+<img width="726" alt="Screenshot 2022-11-23 at 11 02 52 PM" src="https://user-images.githubusercontent.com/48310743/203579453-810f0867-9d3c-4bb6-8b45-9100d1907059.png">
+
+<img width="1185" alt="Screenshot 2022-11-23 at 10 56 33 PM" src="https://user-images.githubusercontent.com/48310743/203578678-573fb534-c563-4e82-a366-cedea4881d27.png">
+
+<img width="742" alt="Screenshot 2022-11-23 at 10 58 03 PM" src="https://user-images.githubusercontent.com/48310743/203578855-e430020a-33db-41b6-9a40-18db95683ed1.png">
+
 ## Notes on scalability and reliability
 
 - Lambda scales with concurrent requests (subject to account quotas)
