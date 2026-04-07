@@ -81,7 +81,7 @@ terraform apply
 
 ```json
 {
-	"long_url": "https://example.com/search?q=helloworld"
+	"long_url": "https://www.google.com/search?q=test"
 }
 ```
 
