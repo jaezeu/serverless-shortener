@@ -97,13 +97,12 @@ terraform apply
 	- Status: `302`
 	- Redirect location returned from integration mapping
 
-<img width="1168" alt="Screenshot 2022-11-23 at 10 55 30 PM" src="https://user-images.githubusercontent.com/48310743/203578413-eca72b35-395a-4736-a386-a340feddcc93.png">
+### Testing via Insomnia/Postman
 
-<img width="726" alt="Screenshot 2022-11-23 at 11 02 52 PM" src="https://user-images.githubusercontent.com/48310743/203579453-810f0867-9d3c-4bb6-8b45-9100d1907059.png">
+<img width="712" height="580" alt="Image" src="https://github.com/user-attachments/assets/2df3f063-0665-405e-aaf8-e3fa8f147f9c" />
 
-<img width="1185" alt="Screenshot 2022-11-23 at 10 56 33 PM" src="https://user-images.githubusercontent.com/48310743/203578678-573fb534-c563-4e82-a366-cedea4881d27.png">
+<img width="713" height="747" alt="image" src="https://github.com/user-attachments/assets/2a77efe8-ed0b-4ad9-b5e2-8a84b5456926" />
 
-<img width="742" alt="Screenshot 2022-11-23 at 10 58 03 PM" src="https://user-images.githubusercontent.com/48310743/203578855-e430020a-33db-41b6-9a40-18db95683ed1.png">
 
 ## Notes on scalability and reliability
 
